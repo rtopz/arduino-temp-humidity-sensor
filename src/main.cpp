@@ -30,7 +30,7 @@ void setup() {
 void loop() {
   oled1.setTextSize(2);
 
-  if(timeCount == 0) {
+  if(timeCount == 9) {
     runCount++;
 
     Serial.println((String)"" + F("----------Run #") + (String)runCount + F("----------"));
@@ -75,12 +75,12 @@ void loop() {
   oled1.writeToDisplay((String)"" + F("Retest Time (s): ") + (String)timeCount);     // Write time count down
   oled1.updateDisplay();
 
-  // Count down the time from 9 to 0 and then reset to 9 once it hits 0.  Based on delay, it will
-  //  run as a multiple.  Ex: 10 counts x 1 sec delay = 10 sec count down
-  if(timeCount > 0) {
+  // Count down the time from 10 to 1 and then reset to 10 once it hits 1.  Based on delay, it will
+  //  run as a multiple.  Ex: 10 counts x 1 sec delay (rough 1 sec) = 10-11 sec count down
+  if(timeCount > 1) {
     timeCount--;
   } else {
-    timeCount = 9;
+    timeCount = 10;
   }
 
   oled1.clearDisplay(true);     // Clear display buffer and reset cursor position (true)
