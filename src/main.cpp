@@ -6,23 +6,26 @@
 //double measureHumidity(bool debug);
 //double grabTempCelsius(bool debug);
 
-long runCount;      // Track how many readings have been taken
-int timeCount;      // Track how many seconds to next run
-LCD_SSD1306 oled1;      // Object to write to SSD1306 OLED display
+#define TIME_MIN  1
+#define TIME_MAX  10
+
+long runCount;                  // Track how many readings have been taken
+int timeCount;                  // Track how many seconds to next run
+LCD_SSD1306 oled1;              // Object to write to SSD1306 OLED display
 TempHumid_Si7021 sensorTH1;     // Object to request Si7021 sensor data
-double tempC, tempF, humidPct;      // Store temp & humidty details
+double tempC, tempF, humidPct;  // Store temp & humidty details
 
 void setup() {
   Serial.begin(9600);
   Serial.println(F("Starting Temp & Humidity Monitor"));
 
   runCount = 0L;          // Set test run amount to 1
-  timeCount = 0;      // Set time to run new measurement to 0 to run one immediately
+  timeCount = TIME_MAX;   // Set time to run new measurement to 0 to run one immediately
   tempC = -99.0;          // Set the tempC to something
-  tempF = 0.0;          // Set the tempF to something
-  humidPct = 0.0;       // Set the humidity to something
+  tempF = 0.0;            // Set the tempF to something
+  humidPct = 0.0;         // Set the humidity to something
 
-  Wire.begin();     // Begins I2C support
+  Wire.begin();       // Begins I2C support
 
   oled1.initDisplay();      // Init the SSD1306 OLED display
 }
@@ -30,12 +33,12 @@ void setup() {
 void loop() {
   oled1.setTextSize(2);
 
-  if(timeCount == 9) {
+  if(timeCount == TIME_MAX) {
     runCount++;
 
     Serial.println((String)"" + F("----------Run #") + (String)runCount + F("----------"));
     // Run the humidity measurement with debug enabled or disabled
-    humidPct = sensorTH1.measureHumidity(false);
+    humidPct = sensorTH1.measureHumidity(true);
   }
 
   Serial.println((String)"" + F("--Time Count: ") + (String)timeCount + F("--"));
@@ -45,7 +48,7 @@ void loop() {
     Serial.println("Humidity = " + (String)humidPct + F("%"));
     oled1.writeToDisplay((String)humidPct + "%");
   } else {
-    Serial.println(F("ERROR: Couldn't get humidity reading"));
+    Serial.println((String)"" + F("ERROR: Couldn't get humidity reading: "));
     oled1.writeToDisplay(F("H-ERROR"));
   }
 
@@ -56,7 +59,7 @@ void loop() {
   // Note, the call to grab temp only woks if humidity was measured first.
   //  Temp is stored with the humidity measurement so you don't have to
   //  remeasure for temp.
-  if(timeCount == 0 && humidPct != -99.0) {
+  if(timeCount == TIME_MAX && humidPct != -99.0) {
     tempC = sensorTH1.grabTempCelsius(false);
   }
 
@@ -75,12 +78,13 @@ void loop() {
   oled1.writeToDisplay((String)"" + F("Retest Time (s): ") + (String)timeCount);     // Write time count down
   oled1.updateDisplay();
 
-  // Count down the time from 10 to 1 and then reset to 10 once it hits 1.  Based on delay, it will
-  //  run as a multiple.  Ex: 10 counts x 1 sec delay (rough 1 sec) = 10-11 sec count down
-  if(timeCount > 1) {
+  // Count down the time from TIME_MAX to TIME_MIN and then reset to TIME_MAX once it hits TIME_MIN.
+  //  Based on delay, it will run as a multiple.
+  //  Ex: 10 counts x 1 sec delay (rough 1 sec) = 10-11 sec count down
+  if(timeCount > TIME_MIN) {
     timeCount--;
   } else {
-    timeCount = 10;
+    timeCount = TIME_MAX;
   }
 
   oled1.clearDisplay(true);     // Clear display buffer and reset cursor position (true)
